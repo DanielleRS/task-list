@@ -12,20 +12,29 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
 
   List _taskList = [];
+  TextEditingController _controllerTask = TextEditingController();
 
   Future<File>_getFile() async {
     final directory = await getApplicationDocumentsDirectory();
     return File("${directory.path}/dados.json");
   }
 
+  _saveTask() {
+    String typedText = _controllerTask.text;
+
+    Map<String, dynamic> task = Map();
+    task["title"] = typedText;
+    task["fulfilled"] = false;
+
+    setState(() {
+      _taskList.add(task);
+    });
+    _saveFile();
+    _controllerTask.text = "";
+  }
+
   _saveFile() async {
     var file = await _getFile();
-
-    //Criar dados
-    Map<String, dynamic> task = Map();
-    task["title"] = "Ir ao mercado";
-    task["fulfilled"] = false;
-    _taskList.add(task);
 
     String data = json.encode(_taskList);
     file.writeAsString(data);
@@ -54,7 +63,7 @@ class _HomeState extends State<Home> {
   Widget build(BuildContext context) {
 
    //_saveFile();
-    print("itens: " + _taskList.toString());
+    //print("itens: " + _taskList.toString());
 
     return Scaffold(
       appBar: AppBar(
@@ -73,6 +82,7 @@ class _HomeState extends State<Home> {
                 return AlertDialog(
                   title: Text("Adicionar Tarefa"),
                   content: TextField(
+                    controller: _controllerTask,
                     decoration: InputDecoration(
                         labelText: "Digite sua tarefa"
                     ),
@@ -86,7 +96,7 @@ class _HomeState extends State<Home> {
                     FlatButton(
                       child: Text("Salvar"),
                       onPressed: (){
-                        //save
+                        _saveTask();
                         Navigator.pop(context);
                       },
                     )
@@ -102,9 +112,20 @@ class _HomeState extends State<Home> {
             child: ListView.builder(
               itemCount: _taskList.length,
                 itemBuilder: (context, index){
-                  return ListTile(
+
+                  return CheckboxListTile(
                     title: Text(_taskList[index]['title']),
+                    value: _taskList[index]['fulfilled'],
+                    onChanged: (changedValue) {
+                      setState(() {
+                        _taskList[index]['fulfilled'] = changedValue;
+                      });
+                      _saveFile();
+                    },
                   );
+                  /*return ListTile(
+                    title: Text(_taskList[index]['title']),
+                  );*/
                 }
             ),
           )
