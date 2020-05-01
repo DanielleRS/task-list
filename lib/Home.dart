@@ -59,6 +59,44 @@ class _HomeState extends State<Home> {
     });
   }
 
+  Widget createListItem(context, index) {
+
+    final item = _taskList[index]["title"];
+
+    return Dismissible(
+        key: Key(item),
+        direction: DismissDirection.endToStart,
+        onDismissed: (direction) {
+          //Remove item da lista
+          _taskList.removeAt(index);
+          _saveFile();
+        },
+        background: Container(
+          color: Colors.red,
+          padding: EdgeInsets.all(16),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: <Widget>[
+              Icon(
+                Icons.delete,
+                color: Colors.white,
+              )
+            ],
+          ),
+        ),
+        child: CheckboxListTile(
+          title: Text(_taskList[index]['title']),
+          value: _taskList[index]['fulfilled'],
+          onChanged: (changedValue) {
+            setState(() {
+              _taskList[index]['fulfilled'] = changedValue;
+            });
+            _saveFile();
+          },
+        )
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
 
@@ -111,22 +149,7 @@ class _HomeState extends State<Home> {
           Expanded(
             child: ListView.builder(
               itemCount: _taskList.length,
-                itemBuilder: (context, index){
-
-                  return CheckboxListTile(
-                    title: Text(_taskList[index]['title']),
-                    value: _taskList[index]['fulfilled'],
-                    onChanged: (changedValue) {
-                      setState(() {
-                        _taskList[index]['fulfilled'] = changedValue;
-                      });
-                      _saveFile();
-                    },
-                  );
-                  /*return ListTile(
-                    title: Text(_taskList[index]['title']),
-                  );*/
-                }
+                itemBuilder: createListItem
             ),
           )
         ],
