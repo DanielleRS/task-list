@@ -13,9 +13,13 @@ class _HomeState extends State<Home> {
 
   List _taskList = [];
 
-  _saveFile() async {
+  Future<File>_getFile() async {
     final directory = await getApplicationDocumentsDirectory();
-    var file = File("${directory.path}/dados.json");
+    return File("${directory.path}/dados.json");
+  }
+
+  _saveFile() async {
+    var file = await _getFile();
 
     //Criar dados
     Map<String, dynamic> task = Map();
@@ -27,15 +31,70 @@ class _HomeState extends State<Home> {
     file.writeAsString(data);
   }
 
+  _readFile() async {
+    try {
+      final file = await _getFile();
+      return file.readAsString();
+    } catch(e) {
+      return null;
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _readFile().then((data){
+      setState(() {
+        _taskList = json.decode(data);
+      });
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
 
-    _saveFile();
+   //_saveFile();
+    print("itens: " + _taskList.toString());
 
     return Scaffold(
       appBar: AppBar(
           title: Text("Lista de tarefas"),
         backgroundColor: Colors.purple,
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      floatingActionButton: FloatingActionButton(
+        child: Icon(Icons.add),
+        backgroundColor: Colors.purple,
+        foregroundColor: Colors.white,
+        onPressed: (){
+          showDialog(
+              context: context,
+              builder: (context) {
+                return AlertDialog(
+                  title: Text("Adicionar Tarefa"),
+                  content: TextField(
+                    decoration: InputDecoration(
+                        labelText: "Digite sua tarefa"
+                    ),
+                    onChanged: (text){},
+                  ),
+                  actions: <Widget>[
+                    FlatButton(
+                      child: Text("Cancelar"),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                    FlatButton(
+                      child: Text("Salvar"),
+                      onPressed: (){
+                        //save
+                        Navigator.pop(context);
+                      },
+                    )
+                  ],
+                );
+              }
+          );
+        },
       ),
       body: Column(
         children: <Widget>[
@@ -44,47 +103,12 @@ class _HomeState extends State<Home> {
               itemCount: _taskList.length,
                 itemBuilder: (context, index){
                   return ListTile(
-                    title: Text(_taskList[index]),
+                    title: Text(_taskList[index]['title']),
                   );
                 }
             ),
           )
         ],
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.purple,
-          foregroundColor: Colors.white,
-          onPressed: (){
-            showDialog(
-                context: context,
-              builder: (context) {
-                  return AlertDialog(
-                    title: Text("Adicionar Tarefa"),
-                    content: TextField(
-                      decoration: InputDecoration(
-                        labelText: "Digite sua tarefa"
-                      ),
-                      onChanged: (text){},
-                    ),
-                    actions: <Widget>[
-                      FlatButton(
-                        child: Text("Cancelar"),
-                        onPressed: () => Navigator.pop(context),
-                      ),
-                      FlatButton(
-                        child: Text("Salvar"),
-                        onPressed: (){
-                          //save
-                          Navigator.pop(context);
-                        },
-                      )
-                    ],
-                  );
-              }
-            );
-          },
-        child: Icon(Icons.add),
       ),
     );
   }
